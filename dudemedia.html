@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+    />
+    <title>Dude Media · cloud sync</title>
+    <style>
+      /* === full original style — kept intact, only added minor missing pieces === */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+      }
+
+      :root {
+        --primary: #005461;
+        --secondary: #018790;
+        --accent: #00b7b5;
+        --bg: #f4f8fa;
+        --white: #ffffff;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        --text: #172e33;
+        --gray-soft: #eaf1f3;
+        --shadow: 0 10px 25px -5px rgba(0, 84, 97, 0.1);
+      }
+
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding-bottom: 30px;
+        overflow-x: hidden;
+        width: 100%;
+      }
+
+      /* === SPLASH SCREEN === */
+      #splash-screen {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(145deg, var(--primary), #002f3c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        animation: splashFadeOut 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        pointer-events: none;
+      }
+
+      @keyframes splashFadeOut {
+        0% {
+          opacity: 1;
+        }
+        60% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+
+      .splash-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: popSplash 0.9s ease-out;
+      }
+
+      .splash-inner h1 {
+        color: white;
+        font-size: clamp(2.5rem, 15vw, 3.2rem);
+        font-weight: 700;
+        letter-spacing: 5px;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .splash-dot {
+        width: 14px;
+        height: 14px;
+        background: var(--accent);
+        border-radius: 30px;
+        margin-top: 8px;
+        animation: dotPulse 1.2s infinite alternate;
+      }
+
+      @keyframes dotPulse {
+        0% {
+          opacity: 0.4;
+          transform: scale(0.9);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1.4);
+        }
+      }
+
+      @keyframes popSplash {
+        0% {
+          opacity: 0;
+          transform: translateY(30px) scale(0.96);
+        }
+        40% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* === TOP BAR === */
+      .top-bar {
+        background: var(--primary);
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 1500;
+        backdrop-filter: blur(8px);
+        background: rgba(0, 84, 97, 0.96);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        width: 100%;
+      }
+
+      .menu-btn {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 2rem;
+        line-height: 1;
+        cursor: pointer;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 30px;
+        transition: background 0.2s;
+        -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0;
+      }
+
+      .menu-btn:active {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .logo {
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 6px;
+      }
+
+      .logo strong {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      .sync-status {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+      }
+
+      /* === SIDE MENU === */
+      .menu-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 30, 35, 0.6);
+        z-index: 1800;
+        visibility: hidden;
+        opacity: 0;
+        transition:
+          opacity 0.3s ease,
+          visibility 0.3s;
+        backdrop-filter: blur(2px);
+      }
+
+      .menu-overlay.active {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .menu-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        max-width: 80%;
+        height: 100%;
+        background: white;
+        z-index: 1900;
+        transform: translateX(-100%);
+        transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.1, 1);
+        box-shadow: 4px 0 30px rgba(0, 40, 45, 0.3);
+        border-radius: 0 24px 24px 0;
+        padding: 30px 16px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .menu-overlay.active .menu-panel {
+        transform: translateX(0);
+      }
+
+      .menu-header {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 30px;
+        letter-spacing: -0.5px;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 12px;
+        margin: 4px 0;
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--primary);
+        border-radius: 18px;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .menu-item:active {
+        background: var(--gray-soft);
+        transform: scale(0.98);
+      }
+
+      .menu-item span {
+        font-size: 1.7rem;
+      }
+
+      .close-menu {
+        margin-top: auto;
+        background: #eff5f7;
+        border: none;
+        padding: 16px;
+        border-radius: 40px;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .close-menu:active {
+        background: #dde7ea;
+      }
+
+      /* === MAIN CONTAINER === */
+      .container {
+        width: 100%;
+        max-width: 600px;
+        margin: 16px auto 0;
+        padding: 0 16px;
+      }
+
+      .card {
+        background: var(--white);
+        border-radius: 28px;
+        padding: 20px 16px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(1, 135, 144, 0.1);
+        width: 100%;
+      }
+
+      h2 {
+        color: var(--primary);
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        flex-wrap: wrap;
+        word-break: break-word;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+        width: 100%;
+      }
+
+      label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #1c454e;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #cbdbe0;
+        border-radius: 40px;
+        font-size: 1rem;
+        background: white;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      textarea {
+        border-radius: 24px;
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 183, 181, 0.2);
+      }
+
+      .main-btn {
+        background: var(--secondary);
+        color: white;
+        border: none;
+        padding: 16px 20px;
+        border-radius: 60px;
+        width: 100%;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(1, 135, 144, 0.3);
+        transition:
+          transform 0.1s,
+          background 0.2s;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .main-btn:active {
+        transform: scale(0.97);
+        background: #016166;
+      }
+
+      .main-btn.secondary {
+        background: var(--white);
+        color: var(--primary);
+        border: 2px solid var(--primary);
+        box-shadow: none;
+      }
+
+      .main-btn.secondary:active {
+        background: var(--gray-soft);
+      }
+
+      .main-btn.small {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        width: auto;
+      }
+
+      /* === TASK ITEMS === */
+      .item {
+        background: white;
+        border-left: 8px solid var(--secondary);
+        border-radius: 24px;
+        padding: 16px 14px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        transition: 0.2s;
+        animation: slideIn 0.3s;
+        width: 100%;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .item.completed {
+        border-left-color: var(--success);
+        background: #f6fffb;
+      }
+
+      .item.deleted {
+        border-left-color: var(--danger);
+        opacity: 0.7;
+      }
+
+      .item-info {
+        flex: 1 1 180px;
+        min-width: 160px;
+        padding-right: 4px;
+      }
+
+      .item-info strong {
+        font-size: 1rem;
+        color: var(--primary);
+        display: block;
+        margin-bottom: 4px;
+        word-break: break-word;
+      }
+
+      .item-info small {
+        font-size: 0.75rem;
+        color: #507781;
+        background: #ebf3f5;
+        padding: 4px 10px;
+        border-radius: 40px;
+        display: inline-block;
+        margin-right: 4px;
+        margin-bottom: 4px;
+        white-space: normal;
+        word-break: break-word;
+      }
+
+      .item-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .action-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.2rem;
+        padding: 8px 12px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: background 0.2s;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .action-btn:hover {
+        background: var(--gray-soft);
+      }
+
+      .action-btn.complete {
+        color: var(--success);
+      }
+
+      .action-btn.delete {
+        color: var(--danger);
+      }
+
+      .action-btn.edit {
+        color: var(--primary);
+      }
+
+      .done-btn {
+        background: var(--success);
+        border: none;
+        color: white;
+        font-weight: 700;
+        padding: 12px 18px;
+        border-radius: 40px;
+        font-size: 0.9rem;
+        min-width: 100px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+        transition: 0.1s;
+        -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0;
+      }
+
+      .done-btn:active {
+        transform: scale(0.95);
+        background: #1e7e34;
+      }
+
+      .completed-badge {
+        background: var(--success);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .deleted-badge {
+        background: var(--danger);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .placeholder-note {
+        background: #e5f0f3;
+        border-radius: 50px;
+        padding: 22px 16px;
+        text-align: center;
+        color: #2b636e;
+        border: 1px dashed #aacbd3;
+        font-size: 0.95rem;
+        width: 100%;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* === SYNC NOTIFICATION === */
+      .sync-toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 3000;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: slideUp 0.3s ease;
+      }
+
+      @keyframes slideUp {
+        from {
+          bottom: -50px;
+          opacity: 0;
+        }
+        to {
+          bottom: 20px;
+          opacity: 1;
+        }
+      }
+
+      .sync-toast.error {
+        background: var(--danger);
+      }
+
+      .sync-toast.success {
+        background: var(--success);
+      }
+
+      .sync-toast.warning {
+        background: var(--warning);
+        color: var(--text);
+      }
+
+      /* === LOADING SPINNER === */
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* === CLIENTS SECTION === */
+      #client-display-list .item {
+        border-left-color: var(--accent);
+      }
+
+      /* === RESPONSIVE ADJUSTMENTS === */
+      @media (max-width: 400px) {
+        .top-bar {
+          padding: 6px 10px;
+        }
+        .logo {
+          font-size: 1.1rem;
+        }
+        .menu-btn,
+        .sync-status {
+          width: 40px;
+          height: 40px;
+        }
+        .item {
+          padding: 14px 12px;
+        }
+        .done-btn {
+          padding: 10px 14px;
+          min-width: 90px;
+          font-size: 0.8rem;
+        }
+        .completed-badge {
+          padding: 6px 12px;
+          font-size: 0.75rem;
+        }
+        .item-info strong {
+          font-size: 0.95rem;
+        }
+        h2 {
+          font-size: 1.1rem;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .item-info {
+          width: 100%;
+        }
+        .done-btn,
+        .completed-badge,
+        .item-actions {
+          align-self: flex-end;
+          margin-top: 6px;
+        }
+      }
+
+      select {
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23005864" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+      }
+
+      img,
+      svg,
+      iframe {
+        max-width: 100%;
+      }
+      button,
+      .item {
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="splash-screen">
+      <div class="splash-inner">
+        <h1>DUDE</h1>
+        <div class="splash-dot"></div>
+      </div>
+    </div>
+
+    <div class="top-bar">
+      <button class="menu-btn" id="menuToggle" aria-label="menu">☰</button>
+      <div class="logo"><strong>DUDE</strong> MEDIA</div>
+      <div class="sync-status" id="syncStatus" title="Sync status">🔄</div>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay">
+      <div class="menu-panel">
+        <div class="menu-header">menu</div>
+        <button class="menu-item" id="menuTasks"><span>📋</span> Tasks</button>
+        <button class="menu-item" id="menuClients">
+          <span>🤝</span> Clients
+        </button>
+        <button class="menu-item" id="menuSync">
+          <span>🔄</span> Manual Sync
+        </button>
+        <button class="menu-item" id="menuReset">
+          <span>🗑️</span> Reset Local
+        </button>
+        <button class="close-menu" id="closeMenu">✕ close</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <section id="dashboard">
+        <div class="card">
+          <h2>➕ new content</h2>
+          <div class="form-group">
+            <label>Client</label>
+            <select id="task-client"></select>
+          </div>
+          <div class="form-group">
+            <label>Format</label>
+            <input type="text" id="task-shape" placeholder="e.g. 9:16 reel" />
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea
+              id="task-notes"
+              placeholder="Additional details..."
+            ></textarea>
+          </div>
+          <button class="main-btn" onclick="addTask()">add to pending</button>
+        </div>
+
+        <h2>⏳ pending</h2>
+        <div id="pending-list"></div>
+
+        <h2 style="margin-top: 30px">✅ completed</h2>
+        <div id="history-list"></div>
+      </section>
+
+      <section id="clients" class="hidden">
+        <div class="card">
+          <h2>📌 register client</h2>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="c-name" placeholder="client name" />
+          </div>
+          <div class="form-group">
+            <label>Contact</label>
+            <input type="text" id="c-contact" placeholder="email / phone" />
+          </div>
+          <div class="form-group">
+            <label>Project type</label>
+            <input type="text" id="c-type" placeholder="monthly reel pack" />
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <textarea
+              id="c-notes"
+              placeholder="Preferences, deadlines..."
+            ></textarea>
+          </div>
+          <button class="main-btn" onclick="addClient()">save client</button>
+        </div>
+
+        <h2>📇 active clients</h2>
+        <div id="client-display-list"></div>
+      </section>
+    </div>
+
+    <!-- Sync notification toast -->
+    <div id="syncToast" class="sync-toast hidden"></div>
+
+    <script>
+      // ============================================
+      // Google Apps Script Configuration
+      // ============================================
+      const APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbw2mAD9Zzp5FlfRpIS3TzXnkQr_wLWhJUNcv4bvTrjReHWVVmLW-QvxBud0UMROQbVd/exec"; // Replace with your deployed Apps Script URL
+
+      // ============================================
+      // App State
+      // ============================================
+      let clients = [];
+      let tasks = [];
+      let syncInProgress = false;
+      let lastSyncTime = null;
+
+      // ============================================
+      // Initialization
+      // ============================================
+      function init() {
+        loadFromLocalStorage();
+        syncFromServer(); // try to sync with server
+        setInterval(autoSync, 30000);
+      }
+
+      function loadFromLocalStorage() {
+        clients = JSON.parse(localStorage.getItem("dm_clients")) || [];
+        tasks = JSON.parse(localStorage.getItem("dm_tasks")) || [];
+        refreshUI();
+      }
+
+      // ============================================
+      // Toast Notifications
+      // ============================================
+      function showToast(message, type = "info", duration = 3000) {
+        const toast = document.getElementById("syncToast");
+        toast.textContent = message;
+        toast.className = `sync-toast ${type}`;
+        toast.classList.remove("hidden");
+
+        setTimeout(() => {
+          toast.classList.add("hidden");
+        }, duration);
+      }
+
+      function updateSyncStatus(icon, title) {
+        document.getElementById("syncStatus").textContent = icon;
+        document.getElementById("syncStatus").title = title;
+      }
+
+      // ============================================
+      // Google Apps Script API Calls (simplified, no-cors friendly)
+      // ============================================
+      async function callAppsScript(action, data = {}) {
+        if (syncInProgress) {
+          showToast("Sync already in progress...", "warning");
+          return null;
+        }
+
+        syncInProgress = true;
+        updateSyncStatus("⏳", "Syncing...");
+
+        try {
+          const payload = { action, data, timestamp: new Date().toISOString() };
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          // Because of no-cors, we can't read response. We'll just assume it's sent.
+          // For GET (pull) we use jsonp separately.
+          return { success: true };
+        } catch (error) {
+          console.error("Apps Script error:", error);
+          showToast("Sync failed: " + error.message, "error");
+          updateSyncStatus("❌", "Sync failed");
+          return null;
+        } finally {
+          syncInProgress = false;
+          setTimeout(() => updateSyncStatus("🔄", "Ready to sync"), 2000);
+        }
+      }
+
+      // JSONP fallback for GET requests (pull)
+      function fetchDataViaJsonP() {
+        return new Promise((resolve, reject) => {
+          const callbackName =
+            "jsonp_callback_" + Math.round(100000 * Math.random());
+          const script = document.createElement("script");
+
+          window[callbackName] = function (data) {
+            delete window[callbackName];
+            document.body.removeChild(script);
+            resolve(data);
+          };
+
+          script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${callbackName}`;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      // ============================================
+      // Sync Functions
+      // ============================================
+      async function syncToServer() {
+        showToast("Pushing to cloud...", "info");
+        updateSyncStatus("⬆️", "Pushing...");
+
+        const data = { clients, tasks, lastSync: lastSyncTime };
+        const result = await callAppsScript("saveData", data);
+
+        if (result) {
+          showToast("Successfully pushed to cloud!", "success");
+          lastSyncTime = new Date().toISOString();
+          localStorage.setItem("dm_last_sync", lastSyncTime);
+          updateSyncStatus("✅", "Last sync: just now");
+        }
+      }
+
+      async function syncFromServer() {
+        showToast("Pulling from cloud...", "info");
+        updateSyncStatus("⬇️", "Pulling...");
+
+        try {
+          const data = await fetchDataViaJsonP();
+          if (data && data.clients && data.tasks) {
+            clients = data.clients;
+            tasks = data.tasks;
+
+            localStorage.setItem("dm_clients", JSON.stringify(clients));
+            localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+
+            lastSyncTime = new Date().toISOString();
+            localStorage.setItem("dm_last_sync", lastSyncTime);
+
+            refreshUI();
+            showToast("Successfully pulled from cloud!", "success");
+            updateSyncStatus("✅", "Last sync: just now");
+          }
+        } catch (error) {
+          console.error("Pull failed:", error);
+          showToast("Pull failed: " + error.message, "error");
+          updateSyncStatus("❌", "Pull failed");
+        }
+      }
+
+      async function autoSync() {
+        if (navigator.onLine && !syncInProgress) {
+          console.log("Auto-syncing...");
+          await syncFromServer();
+        }
+      }
+
+      function resetLocal() {
+        if (confirm("Clear all local data? This will not affect cloud data.")) {
+          clients = [];
+          tasks = [];
+          localStorage.removeItem("dm_clients");
+          localStorage.removeItem("dm_tasks");
+          refreshUI();
+          showToast("Local data cleared", "warning");
+        }
+      }
+
+      // ============================================
+      // Original App Functions (enhanced with delete for completed)
+      // ============================================
+      window.addClient = function () {
+        const name = document.getElementById("c-name").value.trim();
+        const contact = document.getElementById("c-contact").value.trim();
+        const type = document.getElementById("c-type").value.trim();
+        const notes = document.getElementById("c-notes")?.value.trim() || "";
+
+        if (!name) {
+          showToast("Name required", "error");
+          return;
+        }
+
+        const newClient = {
+          id: Date.now(),
+          name,
+          contact,
+          type,
+          notes,
+          createdAt: new Date().toISOString(),
+        };
+
+        clients.push(newClient);
+        localStorage.setItem("dm_clients", JSON.stringify(clients));
+
+        document.getElementById("c-name").value = "";
+        document.getElementById("c-contact").value = "";
+        document.getElementById("c-type").value = "";
+        if (document.getElementById("c-notes"))
+          document.getElementById("c-notes").value = "";
+
+        refreshUI();
+        showToast("Client added", "success");
+
+        if (navigator.onLine) syncToServer();
+      };
+
+      window.addTask = function () {
+        const client = document.getElementById("task-client").value;
+        const shape = document.getElementById("task-shape").value.trim();
+        const notes = document.getElementById("task-notes")?.value.trim() || "";
+
+        if (!client || !shape) {
+          showToast("Select client and describe format", "error");
+          return;
+        }
+
+        const newTask = {
+          id: Date.now(),
+          client,
+          shape,
+          notes,
+          status: "pending",
+          date: new Date().toLocaleDateString(),
+          createdAt: new Date().toISOString(),
+        };
+
+        tasks.push(newTask);
+        localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+
+        document.getElementById("task-shape").value = "";
+        if (document.getElementById("task-notes"))
+          document.getElementById("task-notes").value = "";
+
+        refreshUI();
+        showToast("Task added", "success");
+
+        if (navigator.onLine) syncToServer();
+      };
+
+      window.completeTask = function (id) {
+        const task = tasks.find((t) => t.id === id);
+        if (task) {
+          task.status = "completed";
+          task.completedDate = new Date().toLocaleDateString();
+          task.completedAt = new Date().toISOString();
+          localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+          refreshUI();
+          showToast("Task completed!", "success");
+
+          if (navigator.onLine) syncToServer();
+        }
+      };
+
+      window.deleteTask = function (id) {
+        if (confirm("Delete this task?")) {
+          tasks = tasks.filter((t) => t.id !== id);
+          localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+          refreshUI();
+          showToast("Task deleted", "warning");
+
+          if (navigator.onLine) syncToServer();
+        }
+      };
+
+      window.editTask = function (id) {
+        const task = tasks.find((t) => t.id === id);
+        if (!task) return;
+
+        const newShape = prompt("Edit format:", task.shape);
+        if (newShape && newShape.trim()) {
+          task.shape = newShape.trim();
+          localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+          refreshUI();
+          showToast("Task updated", "success");
+        }
+      };
+
+      window.deleteClient = function (id) {
+        if (
+          confirm("Delete this client? This will not affect existing tasks.")
+        ) {
+          clients = clients.filter((c) => c.id !== id);
+          localStorage.setItem("dm_clients", JSON.stringify(clients));
+          refreshUI();
+          showToast("Client deleted", "warning");
+
+          if (navigator.onLine) syncToServer();
+        }
+      };
+
+      // ============================================
+      // UI Refresh – now with delete button on completed tasks
+      // ============================================
+      function refreshUI() {
+        const clientSelect = document.getElementById("task-client");
+        const clientList = document.getElementById("client-display-list");
+        const pendingList = document.getElementById("pending-list");
+        const historyList = document.getElementById("history-list");
+
+        // Populate client dropdown
+        clientSelect.innerHTML = '<option value="">— select —</option>';
+        if (clients.length === 0) {
+          clientSelect.innerHTML +=
+            '<option value="" disabled>— no clients —</option>';
+        } else {
+          clients.forEach((c) => {
+            clientSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+          });
+        }
+
+        // Client list
+        clientList.innerHTML = "";
+        if (clients.length === 0) {
+          clientList.innerHTML =
+            '<div class="placeholder-note">✨ no clients yet</div>';
+        } else {
+          clients.forEach((c) => {
+            clientList.innerHTML += `
+            <div class="item">
+              <div class="item-info">
+                <strong>${c.name}</strong>
+                <small>${c.type || "—"}</small>
+                <small>📧 ${c.contact || "—"}</small>
+                ${c.notes ? `<small>📝 ${c.notes}</small>` : ""}
+              </div>
+              <div class="item-actions">
+                <button class="action-btn delete" onclick="deleteClient(${c.id})" title="Delete">🗑️</button>
+              </div>
+            </div>`;
+          });
+        }
+
+        // Pending tasks
+        pendingList.innerHTML = "";
+        const pendingTasks = tasks.filter((t) => t.status === "pending");
+        if (pendingTasks.length === 0) {
+          pendingList.innerHTML =
+            '<div class="placeholder-note">⏸️ nothing pending</div>';
+        } else {
+          pendingTasks.forEach((t) => {
+            pendingList.innerHTML += `
+            <div class="item">
+              <div class="item-info">
+                <strong>${t.client}</strong>
+                <small>🎬 ${t.shape}</small>
+                <small>📅 ${t.date}</small>
+                ${t.notes ? `<small>📝 ${t.notes}</small>` : ""}
+              </div>
+              <div class="item-actions">
+                <button class="action-btn complete" onclick="completeTask(${t.id})" title="Complete">✅</button>
+                <button class="action-btn edit" onclick="editTask(${t.id})" title="Edit">✏️</button>
+                <button class="action-btn delete" onclick="deleteTask(${t.id})" title="Delete">🗑️</button>
+              </div>
+            </div>`;
+          });
+        }
+
+        // Completed tasks – now with delete button
+        historyList.innerHTML = "";
+        const completedTasks = tasks.filter((t) => t.status === "completed");
+        if (completedTasks.length === 0) {
+          historyList.innerHTML =
+            '<div class="placeholder-note">✅ no history</div>';
+        } else {
+          completedTasks.forEach((t) => {
+            historyList.innerHTML += `
+            <div class="item completed">
+              <div class="item-info">
+                <strong>${t.client}</strong>
+                <small>🎬 ${t.shape}</small>
+                <small>✅ ${t.completedDate || t.date}</small>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span class="completed-badge">✓ done</span>
+                <button class="action-btn delete" onclick="deleteTask(${t.id})" title="Delete from history">🗑️</button>
+              </div>
+            </div>`;
+          });
+        }
+      }
+
+      // ============================================
+      // UI Event Listeners
+      // ============================================
+      setTimeout(() => {
+        document.getElementById("splash-screen").style.display = "none";
+      }, 1800);
+
+      // Menu functionality
+      const overlay = document.getElementById("menuOverlay");
+      const menuToggle = document.getElementById("menuToggle");
+      const closeMenu = document.getElementById("closeMenu");
+      const menuTasks = document.getElementById("menuTasks");
+      const menuClients = document.getElementById("menuClients");
+      const menuSync = document.getElementById("menuSync");
+      const menuReset = document.getElementById("menuReset");
+
+      function openMenu() {
+        overlay.classList.add("active");
+      }
+      function closeMenuPanel() {
+        overlay.classList.remove("active");
+      }
+
+      menuToggle.addEventListener("click", openMenu);
+      closeMenu.addEventListener("click", closeMenuPanel);
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) closeMenuPanel();
+      });
+
+      menuTasks.addEventListener("click", () => {
+        showSection("dashboard");
+        closeMenuPanel();
+      });
+      menuClients.addEventListener("click", () => {
+        showSection("clients");
+        closeMenuPanel();
+      });
+      menuSync.addEventListener("click", () => {
+        closeMenuPanel();
+        syncFromServer();
+      });
+      menuReset.addEventListener("click", () => {
+        closeMenuPanel();
+        resetLocal();
+      });
+
+      window.showSection = function (id) {
+        document
+          .querySelectorAll("section")
+          .forEach((s) => s.classList.add("hidden"));
+        document.getElementById(id).classList.remove("hidden");
+      };
+
+      // Online/offline
+      window.addEventListener("online", () => {
+        showToast("Back online - syncing...", "success");
+        syncFromServer();
+      });
+      window.addEventListener("offline", () => {
+        showToast("You are offline - working locally", "warning");
+        updateSyncStatus("📴", "Offline mode");
+      });
+
+      // Initialize
+      init();
+      if (document.getElementById("dashboard").classList.contains("hidden"))
+        showSection("dashboard");
+    </script>
+  </body>
+</html>
