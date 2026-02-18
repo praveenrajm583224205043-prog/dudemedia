@@ -153,8 +153,11 @@
         flex-shrink: 0;
       }
 
-      .menu-btn:active {
+      .menu-btn:active,
+      .menu-btn:focus-visible {
         background: rgba(255, 255, 255, 0.15);
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .logo {
@@ -184,7 +187,7 @@
         flex-shrink: 0;
       }
 
-      /* === SIDE MENU === */
+      /* === SIDE MENU - Enhanced for accessibility === */
       .menu-overlay {
         position: fixed;
         inset: 0;
@@ -219,6 +222,7 @@
         padding: 30px 16px;
         display: flex;
         flex-direction: column;
+        overflow-y: auto;
       }
 
       .menu-overlay.active .menu-panel {
@@ -251,11 +255,15 @@
           background 0.2s,
           transform 0.1s;
         -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
       }
 
-      .menu-item:active {
+      .menu-item:active,
+      .menu-item:focus-visible {
         background: var(--gray-soft);
         transform: scale(0.98);
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .menu-item span {
@@ -279,8 +287,11 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      .close-menu:active {
+      .close-menu:active,
+      .close-menu:focus-visible {
         background: #dde7ea;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       /* === MAIN CONTAINER === */
@@ -370,9 +381,12 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      .main-btn:active {
+      .main-btn:active,
+      .main-btn:focus-visible {
         transform: scale(0.97);
         background: #016166;
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .main-btn.secondary {
@@ -474,8 +488,11 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      .action-btn:hover {
+      .action-btn:hover,
+      .action-btn:focus-visible {
         background: var(--gray-soft);
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
       }
 
       .action-btn.complete {
@@ -687,29 +704,29 @@
     </div>
 
     <div class="top-bar">
-      <button class="menu-btn" id="menuToggle" aria-label="menu">☰</button>
+      <!-- Menu button with improved accessibility -->
+      <button class="menu-btn" id="menuToggle" aria-label="menu" aria-expanded="false" aria-controls="menuOverlay">☰</button>
       <div class="logo"><strong>DUDE</strong> MEDIA</div>
       <div class="sync-status" id="syncStatus" title="Sync status">🔄</div>
     </div>
 
-    <div class="menu-overlay" id="menuOverlay">
+    <!-- Menu overlay with improved structure - Quick Add sections removed -->
+    <div class="menu-overlay" id="menuOverlay" role="dialog" aria-label="Navigation menu" aria-hidden="true">
       <div class="menu-panel">
         <div class="menu-header">menu</div>
-        <button class="menu-item" id="menuTasks"><span>📋</span> Tasks</button>
-        <button class="menu-item" id="menuClients">
-          <span>🤝</span> Clients
-        </button>
-        <button class="menu-item" id="menuSync">
-          <span>🔄</span> Manual Sync
-        </button>
-        <button class="menu-item" id="menuReset">
-          <span>🗑️</span> Reset Local
-        </button>
-        <button class="close-menu" id="closeMenu">✕ close</button>
+        
+        <!-- Main navigation items only -->
+        <button class="menu-item" id="menuTasks"><span>📋</span> Tasks Dashboard</button>
+        <button class="menu-item" id="menuClients"><span>🤝</span> Clients Dashboard</button>
+        <button class="menu-item" id="menuSync"><span>🔄</span> Manual Sync</button>
+        <button class="menu-item" id="menuReset"><span>🗑️</span> Reset Local</button>
+
+        <button class="close-menu" id="closeMenu">✕ close menu</button>
       </div>
     </div>
 
     <div class="container">
+      <!-- Main Dashboard Section -->
       <section id="dashboard">
         <div class="card">
           <h2>➕ new content</h2>
@@ -738,6 +755,7 @@
         <div id="history-list"></div>
       </section>
 
+      <!-- Clients Section -->
       <section id="clients" class="hidden">
         <div class="card">
           <h2>📌 register client</h2>
@@ -776,7 +794,7 @@
       // Google Apps Script Configuration
       // ============================================
       const APPS_SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbw2mAD9Zzp5FlfRpIS3TzXnkQr_wLWhJUNcv4bvTrjReHWVVmLW-QvxBud0UMROQbVd/exec"; // Replace with your deployed Apps Script URL
+        "https://script.google.com/macros/s/AKfycbydGlVwoOoEEeB3fZIrPz6b7U1B5dFdrXwrXcfPO_hsMhIqPfVqBdW6PuCS_zF4pBQh/exec"; // Replace with your deployed Apps Script URL
 
       // ============================================
       // App State
@@ -793,12 +811,139 @@
         loadFromLocalStorage();
         syncFromServer(); // try to sync with server
         setInterval(autoSync, 30000);
+        
+        // Setup menu button event listeners
+        setupMenu();
+        
+        // Setup keyboard trap for accessibility
+        setupKeyboardTrap();
       }
 
       function loadFromLocalStorage() {
         clients = JSON.parse(localStorage.getItem("dm_clients")) || [];
         tasks = JSON.parse(localStorage.getItem("dm_tasks")) || [];
         refreshUI();
+      }
+
+      // ============================================
+      // Menu Functionality - Enhanced
+      // ============================================
+      function setupMenu() {
+        const menuToggle = document.getElementById('menuToggle');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const closeMenu = document.getElementById('closeMenu');
+        const menuTasks = document.getElementById('menuTasks');
+        const menuClients = document.getElementById('menuClients');
+        const menuSync = document.getElementById('menuSync');
+        const menuReset = document.getElementById('menuReset');
+
+        // Toggle menu function
+        window.toggleMenu = function(show) {
+          const isActive = menuOverlay.classList.contains('active');
+          
+          if (show === undefined) {
+            // Toggle
+            menuOverlay.classList.toggle('active');
+          } else if (show && !isActive) {
+            menuOverlay.classList.add('active');
+          } else if (!show && isActive) {
+            menuOverlay.classList.remove('active');
+          }
+
+          // Update accessibility attributes
+          const isNowActive = menuOverlay.classList.contains('active');
+          menuToggle.setAttribute('aria-expanded', isNowActive);
+          menuOverlay.setAttribute('aria-hidden', !isNowActive);
+
+          // Prevent body scroll when menu is open
+          document.body.style.overflow = isNowActive ? 'hidden' : '';
+
+          // Focus management
+          if (isNowActive) {
+            closeMenu.focus();
+          }
+        };
+
+        // Event listeners
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleMenu();
+        });
+
+        closeMenu.addEventListener('click', () => toggleMenu(false));
+
+        // Close menu when clicking overlay
+        menuOverlay.addEventListener('click', (e) => {
+          if (e.target === menuOverlay) {
+            toggleMenu(false);
+          }
+        });
+
+        // Menu navigation
+        menuTasks.addEventListener('click', () => {
+          showSection('dashboard');
+          toggleMenu(false);
+          showToast('Tasks dashboard', 'info');
+        });
+
+        menuClients.addEventListener('click', () => {
+          showSection('clients');
+          toggleMenu(false);
+          showToast('Clients dashboard', 'info');
+        });
+
+        menuSync.addEventListener('click', () => {
+          if (navigator.onLine) {
+            syncToServer();
+          } else {
+            showToast('You are offline', 'warning');
+          }
+          toggleMenu(false);
+        });
+
+        menuReset.addEventListener('click', () => {
+          resetLocal();
+          toggleMenu(false);
+        });
+
+        // Escape key to close menu
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && menuOverlay.classList.contains('active')) {
+            toggleMenu(false);
+          }
+        });
+      }
+
+      // Keyboard trap for accessibility (prevents tabbing out of menu)
+      function setupKeyboardTrap() {
+        const menuOverlay = document.getElementById('menuOverlay');
+        const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        
+        menuOverlay.addEventListener('keydown', (e) => {
+          if (e.key === 'Tab' && menuOverlay.classList.contains('active')) {
+            const focusableContent = menuOverlay.querySelectorAll(focusableElements);
+            const firstFocusable = focusableContent[0];
+            const lastFocusable = focusableContent[focusableContent.length - 1];
+
+            if (e.shiftKey) {
+              if (document.activeElement === firstFocusable) {
+                lastFocusable.focus();
+                e.preventDefault();
+              }
+            } else {
+              if (document.activeElement === lastFocusable) {
+                firstFocusable.focus();
+                e.preventDefault();
+              }
+            }
+          }
+        });
+      }
+
+      // Section switcher
+      function showSection(sectionId) {
+        document.getElementById('dashboard').classList.toggle('hidden', sectionId !== 'dashboard');
+        document.getElementById('clients').classList.toggle('hidden', sectionId !== 'clients');
       }
 
       // ============================================
@@ -938,7 +1083,7 @@
       }
 
       // ============================================
-      // Original App Functions (enhanced with delete for completed)
+      // Client Functions
       // ============================================
       window.addClient = function () {
         const name = document.getElementById("c-name").value.trim();
@@ -963,6 +1108,7 @@
         clients.push(newClient);
         localStorage.setItem("dm_clients", JSON.stringify(clients));
 
+        // Clear form
         document.getElementById("c-name").value = "";
         document.getElementById("c-contact").value = "";
         document.getElementById("c-type").value = "";
@@ -975,6 +1121,9 @@
         if (navigator.onLine) syncToServer();
       };
 
+      // ============================================
+      // Task Functions
+      // ============================================
       window.addTask = function () {
         const client = document.getElementById("task-client").value;
         const shape = document.getElementById("task-shape").value.trim();
@@ -1060,7 +1209,7 @@
       };
 
       // ============================================
-      // UI Refresh – now with delete button on completed tasks
+      // UI Refresh
       // ============================================
       function refreshUI() {
         const clientSelect = document.getElementById("task-client");
@@ -1068,11 +1217,11 @@
         const pendingList = document.getElementById("pending-list");
         const historyList = document.getElementById("history-list");
 
-        // Populate client dropdown
+        // Populate main client dropdown
         clientSelect.innerHTML = '<option value="">— select —</option>';
+
         if (clients.length === 0) {
-          clientSelect.innerHTML +=
-            '<option value="" disabled>— no clients —</option>';
+          clientSelect.innerHTML += '<option value="" disabled>— no clients —</option>';
         } else {
           clients.forEach((c) => {
             clientSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
@@ -1126,7 +1275,7 @@
           });
         }
 
-        // Completed tasks – now with delete button
+        // Completed tasks
         historyList.innerHTML = "";
         const completedTasks = tasks.filter((t) => t.status === "completed");
         if (completedTasks.length === 0) {
@@ -1150,73 +1299,8 @@
         }
       }
 
-      // ============================================
-      // UI Event Listeners
-      // ============================================
-      setTimeout(() => {
-        document.getElementById("splash-screen").style.display = "none";
-      }, 1800);
-
-      // Menu functionality
-      const overlay = document.getElementById("menuOverlay");
-      const menuToggle = document.getElementById("menuToggle");
-      const closeMenu = document.getElementById("closeMenu");
-      const menuTasks = document.getElementById("menuTasks");
-      const menuClients = document.getElementById("menuClients");
-      const menuSync = document.getElementById("menuSync");
-      const menuReset = document.getElementById("menuReset");
-
-      function openMenu() {
-        overlay.classList.add("active");
-      }
-      function closeMenuPanel() {
-        overlay.classList.remove("active");
-      }
-
-      menuToggle.addEventListener("click", openMenu);
-      closeMenu.addEventListener("click", closeMenuPanel);
-      overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) closeMenuPanel();
-      });
-
-      menuTasks.addEventListener("click", () => {
-        showSection("dashboard");
-        closeMenuPanel();
-      });
-      menuClients.addEventListener("click", () => {
-        showSection("clients");
-        closeMenuPanel();
-      });
-      menuSync.addEventListener("click", () => {
-        closeMenuPanel();
-        syncFromServer();
-      });
-      menuReset.addEventListener("click", () => {
-        closeMenuPanel();
-        resetLocal();
-      });
-
-      window.showSection = function (id) {
-        document
-          .querySelectorAll("section")
-          .forEach((s) => s.classList.add("hidden"));
-        document.getElementById(id).classList.remove("hidden");
-      };
-
-      // Online/offline
-      window.addEventListener("online", () => {
-        showToast("Back online - syncing...", "success");
-        syncFromServer();
-      });
-      window.addEventListener("offline", () => {
-        showToast("You are offline - working locally", "warning");
-        updateSyncStatus("📴", "Offline mode");
-      });
-
-      // Initialize
-      init();
-      if (document.getElementById("dashboard").classList.contains("hidden"))
-        showSection("dashboard");
+      // Start the app
+      document.addEventListener('DOMContentLoaded', init);
     </script>
   </body>
 </html>
