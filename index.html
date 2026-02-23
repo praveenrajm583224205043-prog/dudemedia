@@ -4,698 +4,408 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>Dude Media · cloud sync</title>
     <style>
-      /* === full original style — kept intact, only added minor missing pieces === */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family:
-          "Inter",
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          Roboto,
-          Helvetica,
-          Arial,
-          sans-serif;
-      }
-
+      /* === CORE VARIABLES === */
       :root {
         --primary: #005461;
         --secondary: #018790;
         --accent: #00b7b5;
-        --bg: #f4f8fa;
+        --bg: #f0f4f6;
         --white: #ffffff;
-        --success: #28a745;
-        --warning: #ffc107;
-        --danger: #dc3545;
-        --text: #172e33;
-        --gray-soft: #eaf1f3;
-        --shadow: 0 10px 25px -5px rgba(0, 84, 97, 0.1);
+        --success: #2e8b57;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --text: #0f2429;
+        --text-light: #5f7a82;
+        --gray-soft: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --radius: 16px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-tap-highlight-color: transparent;
       }
 
       body {
         background-color: var(--bg);
         color: var(--text);
         min-height: 100vh;
-        padding-bottom: 30px;
+        padding-bottom: 40px;
         overflow-x: hidden;
-        width: 100%;
       }
 
       /* === SPLASH SCREEN === */
       #splash-screen {
         position: fixed;
         inset: 0;
-        background: linear-gradient(145deg, var(--primary), #002f3c);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-        animation: splashFadeOut 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        pointer-events: none;
-      }
-
-      @keyframes splashFadeOut {
-        0% {
-          opacity: 1;
-        }
-        60% {
-          opacity: 1;
-        }
-        100% {
-          opacity: 0;
-          visibility: hidden;
-        }
-      }
-
-      .splash-inner {
+        background: linear-gradient(135deg, var(--primary), #002f3c);
         display: flex;
         flex-direction: column;
         align-items: center;
-        animation: popSplash 0.9s ease-out;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeOut 0.5s ease-out 1.5s forwards;
+        pointer-events: none;
+      }
+
+      @keyframes fadeOut {
+        to { opacity: 0; visibility: hidden; }
       }
 
       .splash-inner h1 {
         color: white;
-        font-size: clamp(2.5rem, 15vw, 3.2rem);
-        font-weight: 700;
-        letter-spacing: 5px;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: 4px;
+        margin-bottom: 10px;
       }
 
       .splash-dot {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         background: var(--accent);
-        border-radius: 30px;
-        margin-top: 8px;
-        animation: dotPulse 1.2s infinite alternate;
+        border-radius: 50%;
+        animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
       }
 
-      @keyframes dotPulse {
-        0% {
-          opacity: 0.4;
-          transform: scale(0.9);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1.4);
-        }
-      }
-
-      @keyframes popSplash {
-        0% {
-          opacity: 0;
-          transform: translateY(30px) scale(0.96);
-        }
-        40% {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
+      @keyframes ping {
+        75%, 100% { transform: scale(2); opacity: 0; }
       }
 
       /* === TOP BAR === */
       .top-bar {
-        background: var(--primary);
-        padding: 8px 12px;
+        background: rgba(0, 84, 97, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 10px 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         position: sticky;
         top: 0;
-        z-index: 1500;
-        backdrop-filter: blur(8px);
-        background: rgba(0, 84, 97, 0.96);
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-        width: 100%;
+        z-index: 100;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
       }
 
       .menu-btn {
         background: transparent;
         border: none;
         color: white;
-        font-size: 2rem;
-        line-height: 1;
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
         cursor: pointer;
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 30px;
+        border-radius: 50%;
         transition: background 0.2s;
-        -webkit-tap-highlight-color: transparent;
-        flex-shrink: 0;
       }
 
-      .menu-btn:active,
-      .menu-btn:focus-visible {
-        background: rgba(255, 255, 255, 0.15);
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
+      .menu-btn:active { background: rgba(255,255,255,0.1); }
 
       .logo {
         color: white;
-        font-size: 1.3rem;
-        font-weight: 500;
-        letter-spacing: 1px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 0 6px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
       }
 
-      .logo strong {
-        color: var(--accent);
-        font-weight: 700;
-      }
+      .logo strong { color: var(--accent); }
 
       .sync-status {
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
         font-size: 1.2rem;
-        flex-shrink: 0;
       }
 
-      /* === SIDE MENU - Enhanced for accessibility === */
+      /* === MENU OVERLAY === */
       .menu-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 30, 35, 0.6);
-        z-index: 1800;
-        visibility: hidden;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 200;
         opacity: 0;
-        transition:
-          opacity 0.3s ease,
-          visibility 0.3s;
-        backdrop-filter: blur(2px);
+        visibility: hidden;
+        transition: 0.3s;
+        backdrop-filter: blur(4px);
       }
 
-      .menu-overlay.active {
-        visibility: visible;
-        opacity: 1;
-      }
+      .menu-overlay.active { opacity: 1; visibility: visible; }
 
       .menu-panel {
-        position: fixed;
+        position: absolute;
         top: 0;
         left: 0;
-        width: 280px;
-        max-width: 80%;
-        height: 100%;
+        bottom: 0;
+        width: 260px;
         background: white;
-        z-index: 1900;
         transform: translateX(-100%);
-        transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.1, 1);
-        box-shadow: 4px 0 30px rgba(0, 40, 45, 0.3);
-        border-radius: 0 24px 24px 0;
-        padding: 30px 16px;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 24px;
         display: flex;
         flex-direction: column;
-        overflow-y: auto;
+        gap: 8px;
+        box-shadow: 4px 0 24px rgba(0,0,0,0.1);
       }
 
-      .menu-overlay.active .menu-panel {
-        transform: translateX(0);
-      }
+      .menu-overlay.active .menu-panel { transform: translateX(0); }
 
       .menu-header {
-        font-size: 1.8rem;
-        font-weight: 600;
+        font-size: 1.5rem;
+        font-weight: 700;
         color: var(--primary);
-        margin-bottom: 30px;
-        letter-spacing: -0.5px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--gray-soft);
       }
 
       .menu-item {
+        background: none;
+        border: none;
+        text-align: left;
+        padding: 12px 16px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text);
+        border-radius: 12px;
+        cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 16px;
-        padding: 16px 12px;
-        margin: 4px 0;
-        background: transparent;
-        border: none;
-        width: 100%;
-        text-align: left;
-        font-size: 1.2rem;
-        font-weight: 500;
-        color: var(--primary);
-        border-radius: 18px;
-        transition:
-          background 0.2s,
-          transform 0.1s;
-        -webkit-tap-highlight-color: transparent;
-        cursor: pointer;
+        gap: 12px;
+        transition: background 0.1s;
       }
 
-      .menu-item:active,
-      .menu-item:focus-visible {
-        background: var(--gray-soft);
-        transform: scale(0.98);
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-
-      .menu-item span {
-        font-size: 1.7rem;
-      }
+      .menu-item:active { background: var(--gray-soft); }
+      .menu-item span { font-size: 1.2rem; }
 
       .close-menu {
         margin-top: auto;
-        background: #eff5f7;
+        padding: 14px;
+        background: var(--bg);
         border: none;
-        padding: 16px;
-        border-radius: 40px;
-        color: var(--primary);
+        border-radius: 12px;
         font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+        color: var(--text-light);
         cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
       }
 
-      .close-menu:active,
-      .close-menu:focus-visible {
-        background: #dde7ea;
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-
-      /* === MAIN CONTAINER === */
+      /* === CONTAINER & CARDS === */
       .container {
         width: 100%;
-        max-width: 600px;
-        margin: 16px auto 0;
-        padding: 0 16px;
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 16px;
       }
 
       .card {
         background: var(--white);
-        border-radius: 28px;
-        padding: 20px 16px;
+        border-radius: var(--radius);
+        padding: 20px;
         margin-bottom: 24px;
         box-shadow: var(--shadow);
-        border: 1px solid rgba(1, 135, 144, 0.1);
-        width: 100%;
+        border: 1px solid rgba(0,0,0,0.03);
       }
 
       h2 {
+        font-size: 1.1rem;
         color: var(--primary);
-        font-size: 1.2rem;
         margin-bottom: 16px;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-weight: 600;
-        flex-wrap: wrap;
-        word-break: break-word;
+        gap: 8px;
       }
 
-      .form-group {
-        margin-bottom: 18px;
-        width: 100%;
-      }
-
+      /* === FORMS (More Compact) === */
+      .form-group { margin-bottom: 12px; }
+      
       label {
         display: block;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        margin-bottom: 6px;
-        color: #1c454e;
+        color: var(--text-light);
+        margin-bottom: 4px;
+        margin-left: 4px;
       }
 
-      input,
-      select,
-      textarea {
+      input, select, textarea {
         width: 100%;
-        padding: 14px 16px;
-        border: 1px solid #cbdbe0;
-        border-radius: 40px;
-        font-size: 1rem;
-        background: white;
+        padding: 12px 16px;
+        font-size: 16px; /* Prevents iOS zoom */
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        transition: all 0.2s;
+        outline: none;
         -webkit-appearance: none;
-        appearance: none;
+      }
+
+      select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f7a82' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
       }
 
       textarea {
-        border-radius: 24px;
-        resize: vertical;
         min-height: 80px;
+        resize: vertical;
       }
 
-      input:focus,
-      select:focus,
-      textarea:focus {
-        outline: none;
+      input:focus, select:focus, textarea:focus {
+        background: white;
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(0, 183, 181, 0.2);
+        box-shadow: 0 0 0 3px rgba(0, 183, 181, 0.15);
       }
 
       .main-btn {
+        width: 100%;
+        padding: 14px;
+        margin-top: 8px;
         background: var(--secondary);
         color: white;
         border: none;
-        padding: 16px 20px;
-        border-radius: 60px;
-        width: 100%;
-        font-weight: 700;
+        border-radius: 30px;
+        font-weight: 600;
         font-size: 1rem;
         cursor: pointer;
-        box-shadow: 0 8px 18px rgba(1, 135, 144, 0.3);
-        transition:
-          transform 0.1s,
-          background 0.2s;
-        -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 4px 12px rgba(1, 135, 144, 0.25);
+        transition: transform 0.1s;
       }
 
-      .main-btn:active,
-      .main-btn:focus-visible {
-        transform: scale(0.97);
-        background: #016166;
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
+      .main-btn:active { transform: scale(0.97); background: var(--primary); }
 
-      .main-btn.secondary {
-        background: var(--white);
-        color: var(--primary);
-        border: 2px solid var(--primary);
-        box-shadow: none;
-      }
-
-      .main-btn.secondary:active {
-        background: var(--gray-soft);
-      }
-
-      .main-btn.small {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-        width: auto;
-      }
-
-      /* === TASK ITEMS === */
+      /* === LIST ITEMS (Optimized for Spacing) === */
       .item {
         background: white;
-        border-left: 8px solid var(--secondary);
-        border-radius: 24px;
-        padding: 16px 14px;
-        margin-bottom: 14px;
+        padding: 14px;
+        border-radius: 14px;
+        margin-bottom: 10px;
         display: flex;
-        align-items: center;
+        justify-content: space-between;
+        align-items: flex-start;
         gap: 12px;
-        flex-wrap: wrap;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-        transition: 0.2s;
-        animation: slideIn 0.3s;
-        width: 100%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        border: 1px solid rgba(0,0,0,0.03);
+        border-left: 4px solid var(--secondary);
+        animation: slideIn 0.3s ease-out;
       }
 
       @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateX(-16px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
 
       .item.completed {
         border-left-color: var(--success);
-        background: #f6fffb;
-      }
-
-      .item.deleted {
-        border-left-color: var(--danger);
-        opacity: 0.7;
+        opacity: 0.8;
+        background: #fdfdfd;
       }
 
       .item-info {
-        flex: 1 1 180px;
-        min-width: 160px;
-        padding-right: 4px;
+        flex: 1;
+        /* Ensures text wraps correctly */
+        min-width: 0; 
       }
 
       .item-info strong {
-        font-size: 1rem;
-        color: var(--primary);
         display: block;
+        font-size: 0.95rem;
         margin-bottom: 4px;
-        word-break: break-word;
+        line-height: 1.3;
       }
 
-      .item-info small {
-        font-size: 0.75rem;
-        color: #507781;
-        background: #ebf3f5;
-        padding: 4px 10px;
-        border-radius: 40px;
+      .tag {
         display: inline-block;
+        font-size: 0.7rem;
+        background: #eef2f6;
+        color: var(--text-light);
+        padding: 3px 8px;
+        border-radius: 6px;
         margin-right: 4px;
-        margin-bottom: 4px;
-        white-space: normal;
-        word-break: break-word;
+        margin-top: 4px;
       }
 
       .item-actions {
         display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
+        gap: 4px;
+        flex-shrink: 0; /* Prevents buttons from squishing */
       }
 
-      .action-btn {
+      .icon-btn {
         background: transparent;
         border: none;
-        font-size: 1.2rem;
-        padding: 8px 12px;
-        border-radius: 30px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        display: grid;
+        place-items: center;
         cursor: pointer;
-        transition: background 0.2s;
-        -webkit-tap-highlight-color: transparent;
+        transition: background 0.1s;
       }
 
-      .action-btn:hover,
-      .action-btn:focus-visible {
-        background: var(--gray-soft);
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-      }
-
-      .action-btn.complete {
-        color: var(--success);
-      }
-
-      .action-btn.delete {
-        color: var(--danger);
-      }
-
-      .action-btn.edit {
-        color: var(--primary);
-      }
-
-      .done-btn {
-        background: var(--success);
-        border: none;
-        color: white;
-        font-weight: 700;
-        padding: 12px 18px;
-        border-radius: 40px;
-        font-size: 0.9rem;
-        min-width: 100px;
-        cursor: pointer;
-        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
-        transition: 0.1s;
-        -webkit-tap-highlight-color: transparent;
-        flex-shrink: 0;
-      }
-
-      .done-btn:active {
-        transform: scale(0.95);
-        background: #1e7e34;
-      }
-
-      .completed-badge {
-        background: var(--success);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 40px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-
-      .deleted-badge {
-        background: var(--danger);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 40px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        white-space: nowrap;
-      }
+      .icon-btn:active { background: var(--gray-soft); }
+      .icon-btn.done { color: var(--success); }
+      .icon-btn.edit { color: var(--primary); }
+      .icon-btn.del { color: var(--danger); }
 
       .placeholder-note {
-        background: #e5f0f3;
-        border-radius: 50px;
-        padding: 22px 16px;
         text-align: center;
-        color: #2b636e;
-        border: 1px dashed #aacbd3;
-        font-size: 0.95rem;
-        width: 100%;
+        padding: 30px;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        background: white;
+        border-radius: var(--radius);
+        border: 2px dashed #e2e8f0;
       }
 
-      .hidden {
-        display: none !important;
-      }
-
-      /* === SYNC NOTIFICATION === */
-      .sync-toast {
+      /* === TOAST === */
+      .toast {
         position: fixed;
-        bottom: 20px;
+        bottom: 24px;
         left: 50%;
         transform: translateX(-50%);
-        background: var(--primary);
+        background: #1e293b;
         color: white;
-        padding: 12px 24px;
+        padding: 12px 20px;
         border-radius: 50px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        z-index: 3000;
         font-size: 0.9rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 9999;
         display: flex;
         align-items: center;
         gap: 8px;
-        animation: slideUp 0.3s ease;
+        transition: 0.3s;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        width: max-content;
+        max-width: 90%;
       }
 
-      @keyframes slideUp {
-        from {
-          bottom: -50px;
-          opacity: 0;
-        }
-        to {
-          bottom: 20px;
-          opacity: 1;
-        }
+      .toast.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
       }
+      
+      .toast.success { background: var(--success); }
+      .toast.error { background: var(--danger); }
 
-      .sync-toast.error {
-        background: var(--danger);
-      }
+      .hidden { display: none !important; }
 
-      .sync-toast.success {
-        background: var(--success);
-      }
-
-      .sync-toast.warning {
-        background: var(--warning);
-        color: var(--text);
-      }
-
-      /* === LOADING SPINNER === */
-      .spinner {
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: white;
-        animation: spin 1s ease-in-out infinite;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      /* === CLIENTS SECTION === */
-      #client-display-list .item {
-        border-left-color: var(--accent);
-      }
-
-      /* === RESPONSIVE ADJUSTMENTS === */
-      @media (max-width: 400px) {
-        .top-bar {
-          padding: 6px 10px;
-        }
-        .logo {
-          font-size: 1.1rem;
-        }
-        .menu-btn,
-        .sync-status {
-          width: 40px;
-          height: 40px;
-        }
-        .item {
-          padding: 14px 12px;
-        }
-        .done-btn {
-          padding: 10px 14px;
-          min-width: 90px;
-          font-size: 0.8rem;
-        }
-        .completed-badge {
-          padding: 6px 12px;
-          font-size: 0.75rem;
-        }
-        .item-info strong {
-          font-size: 0.95rem;
-        }
-        h2 {
-          font-size: 1.1rem;
-        }
-      }
-
-      @media (max-width: 360px) {
-        .item {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .item-info {
-          width: 100%;
-        }
-        .done-btn,
-        .completed-badge,
-        .item-actions {
-          align-self: flex-end;
-          margin-top: 6px;
-        }
-      }
-
-      select {
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23005864" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
-        background-repeat: no-repeat;
-        background-position: right 16px center;
-        background-size: 16px;
-      }
-
-      img,
-      svg,
-      iframe {
-        max-width: 100%;
-      }
-      button,
-      .item {
-        -webkit-tap-highlight-color: transparent;
-      }
     </style>
   </head>
   <body>
+    <!-- Splash -->
     <div id="splash-screen">
       <div class="splash-inner">
         <h1>DUDE</h1>
@@ -703,604 +413,372 @@
       </div>
     </div>
 
+    <!-- Header -->
     <div class="top-bar">
-      <!-- Menu button with improved accessibility -->
-      <button class="menu-btn" id="menuToggle" aria-label="menu" aria-expanded="false" aria-controls="menuOverlay">☰</button>
+      <button class="menu-btn" onclick="toggleMenu(true)">☰</button>
       <div class="logo"><strong>DUDE</strong> MEDIA</div>
-      <div class="sync-status" id="syncStatus" title="Sync status">🔄</div>
+      <div class="sync-status" id="syncStatus">🔄</div>
     </div>
 
-    <!-- Menu overlay with improved structure - Quick Add sections removed -->
-    <div class="menu-overlay" id="menuOverlay" role="dialog" aria-label="Navigation menu" aria-hidden="true">
+    <!-- Menu -->
+    <div class="menu-overlay" id="menuOverlay" onclick="handleMenuClick(event)">
       <div class="menu-panel">
-        <div class="menu-header">menu</div>
-        
-        <!-- Main navigation items only -->
-        <button class="menu-item" id="menuTasks"><span>📋</span> Tasks Dashboard</button>
-        <button class="menu-item" id="menuClients"><span>🤝</span> Clients Dashboard</button>
-        <button class="menu-item" id="menuSync"><span>🔄</span> Manual Sync</button>
-        <button class="menu-item" id="menuReset"><span>🗑️</span> Reset Local</button>
-
-        <button class="close-menu" id="closeMenu">✕ close menu</button>
+        <div class="menu-header">Menu</div>
+        <button class="menu-item" onclick="navTo('dashboard')"><span>📋</span> Tasks</button>
+        <button class="menu-item" onclick="navTo('clients')"><span>🤝</span> Clients</button>
+        <button class="menu-item" onclick="triggerSync()"><span>☁️</span> Force Sync</button>
+        <button class="menu-item" onclick="resetLocal()"><span>🗑️</span> Reset App</button>
+        <button class="close-menu" onclick="toggleMenu(false)">Close Menu</button>
       </div>
     </div>
 
     <div class="container">
-      <!-- Main Dashboard Section -->
+      
+      <!-- DASHBOARD SECTION -->
       <section id="dashboard">
+        
+        <!-- Add Task Card -->
         <div class="card">
-          <h2>➕ new content</h2>
+          <h2>➕ New Task</h2>
           <div class="form-group">
             <label>Client</label>
-            <select id="task-client"></select>
+            <select id="task-client">
+              <option value="">Loading...</option>
+            </select>
           </div>
           <div class="form-group">
-            <label>Format</label>
-            <input type="text" id="task-shape" placeholder="e.g. 9:16 reel" />
+            <label>Format / Shape</label>
+            <input type="text" id="task-shape" placeholder="e.g. 9:16 Reel" />
           </div>
           <div class="form-group">
-            <label>Notes (optional)</label>
-            <textarea
-              id="task-notes"
-              placeholder="Additional details..."
-            ></textarea>
+            <label>Notes (Optional)</label>
+            <textarea id="task-notes" placeholder="Details..."></textarea>
           </div>
-          <button class="main-btn" onclick="addTask()">add to pending</button>
+          <button class="main-btn" onclick="addTask()">Add Task</button>
         </div>
 
-        <h2>⏳ pending</h2>
+        <!-- Lists -->
+        <h2>⏳ Pending</h2>
         <div id="pending-list"></div>
 
-        <h2 style="margin-top: 30px">✅ completed</h2>
+        <h2 style="margin-top: 32px">✅ Completed</h2>
         <div id="history-list"></div>
       </section>
 
-      <!-- Clients Section -->
+      <!-- CLIENTS SECTION -->
       <section id="clients" class="hidden">
         <div class="card">
-          <h2>📌 register client</h2>
+          <h2>📌 New Client</h2>
           <div class="form-group">
-            <label>Name</label>
-            <input type="text" id="c-name" placeholder="client name" />
+            <label>Client Name</label>
+            <input type="text" id="c-name" placeholder="Name" />
           </div>
           <div class="form-group">
-            <label>Contact</label>
-            <input type="text" id="c-contact" placeholder="email / phone" />
+            <label>Contact Info</label>
+            <input type="text" id="c-contact" placeholder="Email / Phone" />
           </div>
           <div class="form-group">
-            <label>Project type</label>
-            <input type="text" id="c-type" placeholder="monthly reel pack" />
+            <label>Package Type</label>
+            <input type="text" id="c-type" placeholder="e.g. Monthly Pack" />
           </div>
-          <div class="form-group">
-            <label>Notes</label>
-            <textarea
-              id="c-notes"
-              placeholder="Preferences, deadlines..."
-            ></textarea>
-          </div>
-          <button class="main-btn" onclick="addClient()">save client</button>
+          <button class="main-btn" onclick="addClient()">Save Client</button>
         </div>
 
-        <h2>📇 active clients</h2>
+        <h2>📇 Client List</h2>
         <div id="client-display-list"></div>
       </section>
+
     </div>
 
-    <!-- Sync notification toast -->
-    <div id="syncToast" class="sync-toast hidden"></div>
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
 
     <script>
-      // ============================================
-      // Google Apps Script Configuration
-      // ============================================
-      const APPS_SCRIPT_URL =
-        "https://script.google.com/macros/s/AKfycbydGlVwoOoEEeB3fZIrPz6b7U1B5dFdrXwrXcfPO_hsMhIqPfVqBdW6PuCS_zF4pBQh/exec"; // Replace with your deployed Apps Script URL
+      // CONFIG
+      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydGlVwoOoEEeB3fZIrPz6b7U1B5dFdrXwrXcfPO_hsMhIqPfVqBdW6PuCS_zF4pBQh/exec";
 
-      // ============================================
-      // App State
-      // ============================================
+      // STATE
       let clients = [];
       let tasks = [];
       let syncInProgress = false;
-      let lastSyncTime = null;
 
-      // ============================================
-      // Initialization
-      // ============================================
-      function init() {
-        loadFromLocalStorage();
-        syncFromServer(); // try to sync with server
-        setInterval(autoSync, 30000);
-        
-        // Setup menu button event listeners
-        setupMenu();
-        
-        // Setup keyboard trap for accessibility
-        setupKeyboardTrap();
-      }
-
-      function loadFromLocalStorage() {
-        clients = JSON.parse(localStorage.getItem("dm_clients")) || [];
-        tasks = JSON.parse(localStorage.getItem("dm_tasks")) || [];
+      // INIT
+      document.addEventListener('DOMContentLoaded', () => {
+        loadData();
         refreshUI();
-      }
+        // Initial sync check
+        if(navigator.onLine) syncFromServer();
+        // Auto sync interval
+        setInterval(() => {
+          if(navigator.onLine && !syncInProgress) syncFromServer();
+        }, 30000);
+      });
 
-      // ============================================
-      // Menu Functionality - Enhanced
-      // ============================================
-      function setupMenu() {
-        const menuToggle = document.getElementById('menuToggle');
-        const menuOverlay = document.getElementById('menuOverlay');
-        const closeMenu = document.getElementById('closeMenu');
-        const menuTasks = document.getElementById('menuTasks');
-        const menuClients = document.getElementById('menuClients');
-        const menuSync = document.getElementById('menuSync');
-        const menuReset = document.getElementById('menuReset');
-
-        // Toggle menu function
-        window.toggleMenu = function(show) {
-          const isActive = menuOverlay.classList.contains('active');
-          
-          if (show === undefined) {
-            // Toggle
-            menuOverlay.classList.toggle('active');
-          } else if (show && !isActive) {
-            menuOverlay.classList.add('active');
-          } else if (!show && isActive) {
-            menuOverlay.classList.remove('active');
-          }
-
-          // Update accessibility attributes
-          const isNowActive = menuOverlay.classList.contains('active');
-          menuToggle.setAttribute('aria-expanded', isNowActive);
-          menuOverlay.setAttribute('aria-hidden', !isNowActive);
-
-          // Prevent body scroll when menu is open
-          document.body.style.overflow = isNowActive ? 'hidden' : '';
-
-          // Focus management
-          if (isNowActive) {
-            closeMenu.focus();
-          }
-        };
-
-        // Event listeners
-        menuToggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleMenu();
-        });
-
-        closeMenu.addEventListener('click', () => toggleMenu(false));
-
-        // Close menu when clicking overlay
-        menuOverlay.addEventListener('click', (e) => {
-          if (e.target === menuOverlay) {
-            toggleMenu(false);
-          }
-        });
-
-        // Menu navigation
-        menuTasks.addEventListener('click', () => {
-          showSection('dashboard');
-          toggleMenu(false);
-          showToast('Tasks dashboard', 'info');
-        });
-
-        menuClients.addEventListener('click', () => {
-          showSection('clients');
-          toggleMenu(false);
-          showToast('Clients dashboard', 'info');
-        });
-
-        menuSync.addEventListener('click', () => {
-          if (navigator.onLine) {
-            syncToServer();
-          } else {
-            showToast('You are offline', 'warning');
-          }
-          toggleMenu(false);
-        });
-
-        menuReset.addEventListener('click', () => {
-          resetLocal();
-          toggleMenu(false);
-        });
-
-        // Escape key to close menu
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && menuOverlay.classList.contains('active')) {
-            toggleMenu(false);
-          }
-        });
-      }
-
-      // Keyboard trap for accessibility (prevents tabbing out of menu)
-      function setupKeyboardTrap() {
-        const menuOverlay = document.getElementById('menuOverlay');
-        const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-        
-        menuOverlay.addEventListener('keydown', (e) => {
-          if (e.key === 'Tab' && menuOverlay.classList.contains('active')) {
-            const focusableContent = menuOverlay.querySelectorAll(focusableElements);
-            const firstFocusable = focusableContent[0];
-            const lastFocusable = focusableContent[focusableContent.length - 1];
-
-            if (e.shiftKey) {
-              if (document.activeElement === firstFocusable) {
-                lastFocusable.focus();
-                e.preventDefault();
-              }
-            } else {
-              if (document.activeElement === lastFocusable) {
-                firstFocusable.focus();
-                e.preventDefault();
-              }
-            }
-          }
-        });
-      }
-
-      // Section switcher
-      function showSection(sectionId) {
-        document.getElementById('dashboard').classList.toggle('hidden', sectionId !== 'dashboard');
-        document.getElementById('clients').classList.toggle('hidden', sectionId !== 'clients');
-      }
-
-      // ============================================
-      // Toast Notifications
-      // ============================================
-      function showToast(message, type = "info", duration = 3000) {
-        const toast = document.getElementById("syncToast");
-        toast.textContent = message;
-        toast.className = `sync-toast ${type}`;
-        toast.classList.remove("hidden");
-
-        setTimeout(() => {
-          toast.classList.add("hidden");
-        }, duration);
-      }
-
-      function updateSyncStatus(icon, title) {
-        document.getElementById("syncStatus").textContent = icon;
-        document.getElementById("syncStatus").title = title;
-      }
-
-      // ============================================
-      // Google Apps Script API Calls (simplified, no-cors friendly)
-      // ============================================
-      async function callAppsScript(action, data = {}) {
-        if (syncInProgress) {
-          showToast("Sync already in progress...", "warning");
-          return null;
-        }
-
-        syncInProgress = true;
-        updateSyncStatus("⏳", "Syncing...");
-
+      // --- DATA HANDLING ---
+      function loadData() {
         try {
-          const payload = { action, data, timestamp: new Date().toISOString() };
-          await fetch(APPS_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          // Because of no-cors, we can't read response. We'll just assume it's sent.
-          // For GET (pull) we use jsonp separately.
-          return { success: true };
-        } catch (error) {
-          console.error("Apps Script error:", error);
-          showToast("Sync failed: " + error.message, "error");
-          updateSyncStatus("❌", "Sync failed");
-          return null;
-        } finally {
-          syncInProgress = false;
-          setTimeout(() => updateSyncStatus("🔄", "Ready to sync"), 2000);
+          clients = JSON.parse(localStorage.getItem("dm_clients")) || [];
+          tasks = JSON.parse(localStorage.getItem("dm_tasks")) || [];
+        } catch(e) {
+          console.error("Data load error", e);
+          clients = []; tasks = [];
         }
       }
 
-      // JSONP fallback for GET requests (pull)
-      function fetchDataViaJsonP() {
-        return new Promise((resolve, reject) => {
-          const callbackName =
-            "jsonp_callback_" + Math.round(100000 * Math.random());
-          const script = document.createElement("script");
+      function saveData() {
+        localStorage.setItem("dm_clients", JSON.stringify(clients));
+        localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+      }
 
-          window[callbackName] = function (data) {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            resolve(data);
-          };
+      // --- UI LOGIC ---
+      function toggleMenu(show) {
+        const overlay = document.getElementById('menuOverlay');
+        if(show) overlay.classList.add('active');
+        else overlay.classList.remove('active');
+      }
 
-          script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${callbackName}`;
-          script.onerror = reject;
-          document.body.appendChild(script);
+      function handleMenuClick(e) {
+        if(e.target.id === 'menuOverlay') toggleMenu(false);
+      }
+
+      function navTo(section) {
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('clients').classList.add('hidden');
+        document.getElementById(section).classList.remove('hidden');
+        toggleMenu(false);
+        window.scrollTo(0,0);
+      }
+
+      function showToast(msg, type = 'normal') {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.className = `toast visible ${type}`;
+        setTimeout(() => t.classList.remove('visible'), 3000);
+      }
+
+      // --- CORE FUNCTIONS ---
+      function addClient() {
+        const nameEl = document.getElementById("c-name");
+        const contactEl = document.getElementById("c-contact");
+        const typeEl = document.getElementById("c-type");
+
+        if (!nameEl.value.trim()) return showToast("Name required", "error");
+
+        clients.push({
+          id: Date.now(),
+          name: nameEl.value.trim(),
+          contact: contactEl.value.trim(),
+          type: typeEl.value.trim()
         });
+
+        saveData();
+        nameEl.value = ""; contactEl.value = ""; typeEl.value = "";
+        refreshUI();
+        showToast("Client Saved", "success");
+        triggerSync();
       }
 
-      // ============================================
-      // Sync Functions
-      // ============================================
-      async function syncToServer() {
-        showToast("Pushing to cloud...", "info");
-        updateSyncStatus("⬆️", "Pushing...");
-
-        const data = { clients, tasks, lastSync: lastSyncTime };
-        const result = await callAppsScript("saveData", data);
-
-        if (result) {
-          showToast("Successfully pushed to cloud!", "success");
-          lastSyncTime = new Date().toISOString();
-          localStorage.setItem("dm_last_sync", lastSyncTime);
-          updateSyncStatus("✅", "Last sync: just now");
+      function deleteClient(id) {
+        if(confirm("Remove this client?")) {
+          clients = clients.filter(c => c.id !== id);
+          saveData();
+          refreshUI();
+          triggerSync();
         }
       }
 
-      async function syncFromServer() {
-        showToast("Pulling from cloud...", "info");
-        updateSyncStatus("⬇️", "Pulling...");
+      function addTask() {
+        const client = document.getElementById("task-client").value;
+        const shapeEl = document.getElementById("task-shape");
+        const notesEl = document.getElementById("task-notes");
 
-        try {
-          const data = await fetchDataViaJsonP();
-          if (data && data.clients && data.tasks) {
-            clients = data.clients;
-            tasks = data.tasks;
+        if (!client || !shapeEl.value.trim()) return showToast("Client & Format required", "error");
 
-            localStorage.setItem("dm_clients", JSON.stringify(clients));
-            localStorage.setItem("dm_tasks", JSON.stringify(tasks));
+        tasks.push({
+          id: Date.now(),
+          client,
+          shape: shapeEl.value.trim(),
+          notes: notesEl.value.trim(),
+          status: "pending",
+          date: new Date().toLocaleDateString()
+        });
 
-            lastSyncTime = new Date().toISOString();
-            localStorage.setItem("dm_last_sync", lastSyncTime);
+        saveData();
+        shapeEl.value = ""; notesEl.value = "";
+        refreshUI();
+        showToast("Task Added", "success");
+        triggerSync();
+      }
 
-            refreshUI();
-            showToast("Successfully pulled from cloud!", "success");
-            updateSyncStatus("✅", "Last sync: just now");
-          }
-        } catch (error) {
-          console.error("Pull failed:", error);
-          showToast("Pull failed: " + error.message, "error");
-          updateSyncStatus("❌", "Pull failed");
+      function completeTask(id) {
+        const t = tasks.find(x => x.id === id);
+        if(t) {
+          t.status = "completed";
+          t.completedDate = new Date().toLocaleDateString();
+          saveData();
+          refreshUI();
+          showToast("Task Completed!", "success");
+          triggerSync();
         }
       }
 
-      async function autoSync() {
-        if (navigator.onLine && !syncInProgress) {
-          console.log("Auto-syncing...");
-          await syncFromServer();
+      function deleteTask(id) {
+        if(confirm("Delete task?")) {
+          tasks = tasks.filter(x => x.id !== id);
+          saveData();
+          refreshUI();
+          triggerSync();
+        }
+      }
+      
+      function editTask(id) {
+        const t = tasks.find(x => x.id === id);
+        if(!t) return;
+        const newVal = prompt("Edit Format:", t.shape);
+        if(newVal !== null) {
+          t.shape = newVal;
+          saveData();
+          refreshUI();
         }
       }
 
       function resetLocal() {
-        if (confirm("Clear all local data? This will not affect cloud data.")) {
-          clients = [];
-          tasks = [];
-          localStorage.removeItem("dm_clients");
-          localStorage.removeItem("dm_tasks");
-          refreshUI();
-          showToast("Local data cleared", "warning");
+        if(confirm("Clear local data only?")) {
+          localStorage.clear();
+          location.reload();
         }
       }
 
-      // ============================================
-      // Client Functions
-      // ============================================
-      window.addClient = function () {
-        const name = document.getElementById("c-name").value.trim();
-        const contact = document.getElementById("c-contact").value.trim();
-        const type = document.getElementById("c-type").value.trim();
-        const notes = document.getElementById("c-notes")?.value.trim() || "";
-
-        if (!name) {
-          showToast("Name required", "error");
-          return;
-        }
-
-        const newClient = {
-          id: Date.now(),
-          name,
-          contact,
-          type,
-          notes,
-          createdAt: new Date().toISOString(),
-        };
-
-        clients.push(newClient);
-        localStorage.setItem("dm_clients", JSON.stringify(clients));
-
-        // Clear form
-        document.getElementById("c-name").value = "";
-        document.getElementById("c-contact").value = "";
-        document.getElementById("c-type").value = "";
-        if (document.getElementById("c-notes"))
-          document.getElementById("c-notes").value = "";
-
-        refreshUI();
-        showToast("Client added", "success");
-
-        if (navigator.onLine) syncToServer();
-      };
-
-      // ============================================
-      // Task Functions
-      // ============================================
-      window.addTask = function () {
-        const client = document.getElementById("task-client").value;
-        const shape = document.getElementById("task-shape").value.trim();
-        const notes = document.getElementById("task-notes")?.value.trim() || "";
-
-        if (!client || !shape) {
-          showToast("Select client and describe format", "error");
-          return;
-        }
-
-        const newTask = {
-          id: Date.now(),
-          client,
-          shape,
-          notes,
-          status: "pending",
-          date: new Date().toLocaleDateString(),
-          createdAt: new Date().toISOString(),
-        };
-
-        tasks.push(newTask);
-        localStorage.setItem("dm_tasks", JSON.stringify(tasks));
-
-        document.getElementById("task-shape").value = "";
-        if (document.getElementById("task-notes"))
-          document.getElementById("task-notes").value = "";
-
-        refreshUI();
-        showToast("Task added", "success");
-
-        if (navigator.onLine) syncToServer();
-      };
-
-      window.completeTask = function (id) {
-        const task = tasks.find((t) => t.id === id);
-        if (task) {
-          task.status = "completed";
-          task.completedDate = new Date().toLocaleDateString();
-          task.completedAt = new Date().toISOString();
-          localStorage.setItem("dm_tasks", JSON.stringify(tasks));
-          refreshUI();
-          showToast("Task completed!", "success");
-
-          if (navigator.onLine) syncToServer();
-        }
-      };
-
-      window.deleteTask = function (id) {
-        if (confirm("Delete this task?")) {
-          tasks = tasks.filter((t) => t.id !== id);
-          localStorage.setItem("dm_tasks", JSON.stringify(tasks));
-          refreshUI();
-          showToast("Task deleted", "warning");
-
-          if (navigator.onLine) syncToServer();
-        }
-      };
-
-      window.editTask = function (id) {
-        const task = tasks.find((t) => t.id === id);
-        if (!task) return;
-
-        const newShape = prompt("Edit format:", task.shape);
-        if (newShape && newShape.trim()) {
-          task.shape = newShape.trim();
-          localStorage.setItem("dm_tasks", JSON.stringify(tasks));
-          refreshUI();
-          showToast("Task updated", "success");
-        }
-      };
-
-      window.deleteClient = function (id) {
-        if (
-          confirm("Delete this client? This will not affect existing tasks.")
-        ) {
-          clients = clients.filter((c) => c.id !== id);
-          localStorage.setItem("dm_clients", JSON.stringify(clients));
-          refreshUI();
-          showToast("Client deleted", "warning");
-
-          if (navigator.onLine) syncToServer();
-        }
-      };
-
-      // ============================================
-      // UI Refresh
-      // ============================================
+      // --- RENDERER ---
       function refreshUI() {
-        const clientSelect = document.getElementById("task-client");
-        const clientList = document.getElementById("client-display-list");
-        const pendingList = document.getElementById("pending-list");
-        const historyList = document.getElementById("history-list");
-
-        // Populate main client dropdown
-        clientSelect.innerHTML = '<option value="">— select —</option>';
-
-        if (clients.length === 0) {
-          clientSelect.innerHTML += '<option value="" disabled>— no clients —</option>';
+        // 1. Update Dropdown
+        const sel = document.getElementById("task-client");
+        if(clients.length === 0) {
+          sel.innerHTML = `<option value="">-- No Clients --</option>`;
         } else {
-          clients.forEach((c) => {
-            clientSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-          });
+          sel.innerHTML = `<option value="">-- Select Client --</option>` + 
+            clients.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
         }
 
-        // Client list
-        clientList.innerHTML = "";
-        if (clients.length === 0) {
-          clientList.innerHTML =
-            '<div class="placeholder-note">✨ no clients yet</div>';
+        // 2. Render Pending
+        const pendingContainer = document.getElementById("pending-list");
+        const pending = tasks.filter(t => t.status === "pending");
+        
+        if(pending.length === 0) {
+          pendingContainer.innerHTML = `<div class="placeholder-note">✨ No pending tasks</div>`;
         } else {
-          clients.forEach((c) => {
-            clientList.innerHTML += `
-            <div class="item">
-              <div class="item-info">
-                <strong>${c.name}</strong>
-                <small>${c.type || "—"}</small>
-                <small>📧 ${c.contact || "—"}</small>
-                ${c.notes ? `<small>📝 ${c.notes}</small>` : ""}
-              </div>
-              <div class="item-actions">
-                <button class="action-btn delete" onclick="deleteClient(${c.id})" title="Delete">🗑️</button>
-              </div>
-            </div>`;
-          });
-        }
-
-        // Pending tasks
-        pendingList.innerHTML = "";
-        const pendingTasks = tasks.filter((t) => t.status === "pending");
-        if (pendingTasks.length === 0) {
-          pendingList.innerHTML =
-            '<div class="placeholder-note">⏸️ nothing pending</div>';
-        } else {
-          pendingTasks.forEach((t) => {
-            pendingList.innerHTML += `
+          pendingContainer.innerHTML = pending.map(t => `
             <div class="item">
               <div class="item-info">
                 <strong>${t.client}</strong>
-                <small>🎬 ${t.shape}</small>
-                <small>📅 ${t.date}</small>
-                ${t.notes ? `<small>📝 ${t.notes}</small>` : ""}
+                <span class="tag">🎬 ${t.shape}</span>
+                ${t.notes ? `<span class="tag">📝 ${t.notes}</span>` : ''}
               </div>
               <div class="item-actions">
-                <button class="action-btn complete" onclick="completeTask(${t.id})" title="Complete">✅</button>
-                <button class="action-btn edit" onclick="editTask(${t.id})" title="Edit">✏️</button>
-                <button class="action-btn delete" onclick="deleteTask(${t.id})" title="Delete">🗑️</button>
+                <button class="icon-btn done" onclick="completeTask(${t.id})">✔</button>
+                <button class="icon-btn edit" onclick="editTask(${t.id})">✎</button>
+                <button class="icon-btn del" onclick="deleteTask(${t.id})">✕</button>
               </div>
-            </div>`;
-          });
+            </div>
+          `).join('');
         }
 
-        // Completed tasks
-        historyList.innerHTML = "";
-        const completedTasks = tasks.filter((t) => t.status === "completed");
-        if (completedTasks.length === 0) {
-          historyList.innerHTML =
-            '<div class="placeholder-note">✅ no history</div>';
+        // 3. Render History
+        const histContainer = document.getElementById("history-list");
+        const done = tasks.filter(t => t.status === "completed");
+
+        if(done.length === 0) {
+          histContainer.innerHTML = `<div class="placeholder-note">No history yet</div>`;
         } else {
-          completedTasks.forEach((t) => {
-            historyList.innerHTML += `
+          histContainer.innerHTML = done.map(t => `
             <div class="item completed">
               <div class="item-info">
                 <strong>${t.client}</strong>
-                <small>🎬 ${t.shape}</small>
-                <small>✅ ${t.completedDate || t.date}</small>
+                <span class="tag">🎬 ${t.shape}</span>
+                <span class="tag">✅ ${t.completedDate}</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span class="completed-badge">✓ done</span>
-                <button class="action-btn delete" onclick="deleteTask(${t.id})" title="Delete from history">🗑️</button>
+              <div class="item-actions">
+                <button class="icon-btn del" onclick="deleteTask(${t.id})">✕</button>
               </div>
-            </div>`;
-          });
+            </div>
+          `).join('');
+        }
+
+        // 4. Render Clients
+        const cliContainer = document.getElementById("client-display-list");
+        if(clients.length === 0) {
+          cliContainer.innerHTML = `<div class="placeholder-note">Add your first client above</div>`;
+        } else {
+          cliContainer.innerHTML = clients.map(c => `
+            <div class="item" style="border-left-color: var(--accent)">
+              <div class="item-info">
+                <strong>${c.name}</strong>
+                <span class="tag">${c.type || 'Standard'}</span>
+                <span class="tag">📧 ${c.contact || 'No contact'}</span>
+              </div>
+              <div class="item-actions">
+                <button class="icon-btn del" onclick="deleteClient(${c.id})">✕</button>
+              </div>
+            </div>
+          `).join('');
         }
       }
 
-      // Start the app
-      document.addEventListener('DOMContentLoaded', init);
+      // --- SYNC LOGIC ---
+      function triggerSync() {
+        toggleMenu(false);
+        syncToServer();
+      }
+
+      async function syncToServer() {
+        if(syncInProgress) return;
+        const icon = document.getElementById("syncStatus");
+        icon.innerText = "⏳";
+        syncInProgress = true;
+
+        try {
+          // Push
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "saveData", data: { clients, tasks } })
+          });
+          
+          // Pull (via JSONP logic to avoid CORS block on GET)
+          await pullData();
+          
+          icon.innerText = "✅";
+          setTimeout(() => icon.innerText = "🔄", 3000);
+        } catch(e) {
+          console.error(e);
+          icon.innerText = "❌";
+        } finally {
+          syncInProgress = false;
+        }
+      }
+
+      function pullData() {
+        return new Promise((resolve, reject) => {
+          const cb = "cb_" + Math.random().toString(36).substring(7);
+          window[cb] = (data) => {
+            if(data && data.clients) {
+              clients = data.clients;
+              tasks = data.tasks || [];
+              saveData();
+              refreshUI();
+            }
+            delete window[cb];
+            document.body.removeChild(script);
+            resolve();
+          };
+          const script = document.createElement('script');
+          script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${cb}`;
+          script.onerror = () => { delete window[cb]; resolve(); }; // Soft fail
+          document.body.appendChild(script);
+        });
+      }
+
     </script>
   </body>
 </html>
